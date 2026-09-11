@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CVD Risk Screener</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <main class="wrap">
+    <header>
+      <h1>Cardiovascular Risk Screener</h1>
+      <p class="sub">Estimate cardiovascular disease risk from lifestyle and health survey data. This is a screening tool trained on population survey data, not a medical diagnosis.</p>
+    </header>
+
+    {% if error %}
+      <div class="banner banner-error">{{ error }}</div>
+    {% endif %}
+
+    {% if result %}
+      <section class="result {{ 'result-risk' if result.at_risk else 'result-ok' }}">
+        <div class="result-headline">{{ result.label }} &mdash; estimated risk {{ result.percent }}%</div>
+        <div class="result-detail">
+          Decision threshold: {{ result.threshold }}% (tuned for ~80% recall on the positive class, so this
+          screener flags risk aggressively rather than missing cases).<br>
+          Computed BMI: {{ result.bmi }} ({{ result.bmi_category }})
+        </div>
+      </section>
+    {% endif %}
+
+    <form method="post" action="{{ url_for('predict_view') }}" class="grid">
+      <fieldset>
+        <legend>General</legend>
+        <label>Sex
+          <select name="Sex">
+            <option {{ 'selected' if form.Sex == 'Female' }}>Female</option>
+            <option {{ 'selected' if form.Sex == 'Male' }}>Male</option>
+          </select>
+        </label>
+        <label>Age category
+          <select name="Age_Category">
+            {% for opt in age_category_options %}
+              <option {{ 'selected' if form.Age_Category == opt }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Height (cm)
+          <input type="number" step="0.1" min="50" max="260" name="Height_cm" value="{{ form.Height_cm }}" required>
+        </label>
+        <label>Weight (kg)
+          <input type="number" step="0.1" min="20" max="400" name="Weight_kg" value="{{ form.Weight_kg }}" required>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Health status</legend>
+        <label>General health (self-reported)
+          <select name="General_Health">
+            {% for opt in general_health_options %}
+              <option {{ 'selected' if form.General_Health == opt }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Last checkup
+          <select name="Checkup">
+            {% for opt in checkup_options %}
+              <option {{ 'selected' if form.Checkup == opt }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <label>Diabetes status
+          <select name="Diabetes">
+            {% for opt in diabetes_options %}
+              <option {{ 'selected' if form.Diabetes == opt }}>{{ opt }}</option>
+            {% endfor %}
+          </select>
+        </label>
+      </fieldset>
+
+      <fieldset>
+        <legend>Comorbidities</legend>
+        {% for field, display in [('Arthritis','Arthritis'), ('Depression','Depression'), ('Skin_Cancer','Skin cancer'), ('Other_Cancer','Other cancer')] %}
+        <label class="yesno">{{ display }}
+          <select name="{{ field }}">
+            <option {{ 'selected' if form[field] == 'No' }}>No</option>
+            <option {{ 'selected' if form[field] == 'Yes' }}>Yes</option>
+          </select>
+        </label>
+        {% endfor %}
+      </fieldset>
+
+      <fieldset>
+        <legend>Lifestyle</legend>
+        <label class="yesno">Regular exercise
+          <select name="Exercise">
+            <option {{ 'selected' if form.Exercise == 'Yes' }}>Yes</option>
+            <option {{ 'selected' if form.Exercise == 'No' }}>No</option>
+          </select>
+        </label>
+        <label class="yesno">Smoking history
+          <select name="Smoking_History">
+            <option {{ 'selected' if form.Smoking_History == 'No' }}>No</option>
+            <option {{ 'selected' if form.Smoking_History == 'Yes' }}>Yes</option>
+          </select>
+        </label>
+        <label>Alcohol consumption (days/month)
+          <input type="number" step="1" min="0" max="30" name="Alcohol_Consumption" value="{{ form.Alcohol_Consumption }}" required>
+        </label>
+        <label>Fruit consumption (times/month)
+          <input type="number" step="1" min="0" max="120" name="Fruit_Consumption" value="{{ form.Fruit_Consumption }}" required>
+        </label>
+        <label>Green vegetable consumption (times/month)
+          <input type="number" step="1" min="0" max="120" name="Green_Vegetables_Consumption" value="{{ form.Green_Vegetables_Consumption }}" required>
+        </label>
+        <label>Fried potato consumption (times/month)
+          <input type="number" step="1" min="0" max="120" name="FriedPotato_Consumption" value="{{ form.FriedPotato_Consumption }}" required>
+        </label>
+      </fieldset>
+
+      <button type="submit">Estimate risk</button>
+    </form>
+
+    <footer>
+      Model: LightGBM classifier trained on the "Cardiovascular Diseases Risk Prediction" survey dataset (~309k rows).
+      Test ROC-AUC 0.833, average precision 0.302. For education/portfolio purposes only &mdash; not medical advice.
+    </footer>
+  </main>
+</body>
+</html>

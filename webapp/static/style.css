@@ -1,0 +1,141 @@
+:root {
+  color-scheme: light;
+  --bg: #f4f6f8;
+  --card: #ffffff;
+  --ink: #1c2733;
+  --sub: #5b6b7a;
+  --accent: #2563eb;
+  --ok-bg: #e6f6ec;
+  --ok-ink: #146c2e;
+  --risk-bg: #fdecea;
+  --risk-ink: #b3261e;
+  --border: #e1e6eb;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  line-height: 1.45;
+}
+
+.wrap {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 20px 60px;
+}
+
+header h1 {
+  margin: 0 0 6px;
+  font-size: 1.6rem;
+}
+
+header .sub {
+  color: var(--sub);
+  margin: 0 0 24px;
+  font-size: 0.95rem;
+}
+
+.banner {
+  padding: 12px 16px;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.banner-error {
+  background: var(--risk-bg);
+  color: var(--risk-ink);
+}
+
+.result {
+  border-radius: 12px;
+  padding: 18px 20px;
+  margin-bottom: 24px;
+  border: 1px solid var(--border);
+}
+
+.result-ok { background: var(--ok-bg); color: var(--ok-ink); }
+.result-risk { background: var(--risk-bg); color: var(--risk-ink); }
+
+.result-headline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.result-detail {
+  font-size: 0.88rem;
+  opacity: 0.9;
+}
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--card);
+  padding: 16px 18px 18px;
+}
+
+legend {
+  padding: 0 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--sub);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+fieldset > label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 0.88rem;
+  margin-bottom: 12px;
+  color: var(--ink);
+}
+
+fieldset > label:last-child { margin-bottom: 0; }
+
+select, input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 0.95rem;
+  background: #fff;
+  color: var(--ink);
+}
+
+button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+button:hover { background: #1d4ed8; }
+
+footer {
+  margin-top: 28px;
+  font-size: 0.78rem;
+  color: var(--sub);
+}
+
+@media (min-width: 640px) {
+  fieldset {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px 16px;
+  }
+  legend { grid-column: 1 / -1; }
+}

@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: cvd-risk-screener
+    runtime: python
+    plan: free
+    rootDir: webapp
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn --bind 0.0.0.0:$PORT --workers 2 --timeout 90 application:app
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
