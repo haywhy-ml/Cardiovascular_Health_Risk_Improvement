@@ -39,7 +39,9 @@ The first version of this notebook stopped after fitting and saving the best pip
 .
 ├── cardiovascular_disease_risk_prediction.ipynb
 ├── requirements.txt
-├── .gitignore
+├── bundle
+├── render.yaml
+├── webapp
 └── README.md
 ```
 
@@ -48,7 +50,3 @@ The first version of this notebook stopped after fitting and saving the best pip
 ```bash
 pip install -r requirements.txt
 ```
-
-## Notes
-
-- The dataset (`CVD_cleaned.csv`) and the saved model bundle (`.pkl`) are not included in this repo — see `.gitignore`. Source the dataset from Kaggle ("Cardiovascular Diseases Risk Prediction Dataset") if you want to re-run the notebook.
