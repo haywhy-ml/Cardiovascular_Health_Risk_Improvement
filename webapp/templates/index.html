@@ -3,127 +3,282 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>CVD Risk Screener</title>
+  <meta name="description" content="An educational cardiovascular disease risk screener built from population survey data.">
+  <title>PulseCheck | Cardiovascular Risk Screener</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <main class="wrap">
-    <header>
-      <h1>Cardiovascular Risk Screener</h1>
-      <p class="sub">Estimate cardiovascular disease risk from lifestyle and health survey data. This is a screening tool trained on population survey data, not a medical diagnosis.</p>
-    </header>
+  <nav class="site-nav" aria-label="Primary navigation">
+    <a class="brand" href="#top" aria-label="PulseCheck home">
+      <span class="brand-mark" aria-hidden="true"><span></span></span>
+      <span>PulseCheck</span>
+    </a>
+    <div class="nav-links">
+      <a href="#screening">Risk screener</a>
+      <a href="#insights">Data insights</a>
+      <a href="#about">About</a>
+    </div>
+    <a class="nav-cta" href="#screening">Check risk</a>
+  </nav>
 
-    {% if error %}
-      <div class="banner banner-error">{{ error }}</div>
-    {% endif %}
-
-    {% if result %}
-      <section class="result {{ 'result-risk' if result.at_risk else 'result-ok' }}">
-        <div class="result-headline">{{ result.label }} &mdash; estimated risk {{ result.percent }}%</div>
-        <div class="result-detail">
-          Decision threshold: {{ result.threshold }}% (tuned for ~80% recall on the positive class, so this
-          screener flags risk aggressively rather than missing cases).<br>
-          Computed BMI: {{ result.bmi }} ({{ result.bmi_category }})
+  <main id="top">
+    <section class="hero shell">
+      <div class="hero-copy">
+        <p class="eyebrow"><span></span> Data-informed cardiovascular screening</p>
+        <h1>Know your risk.<br><em>Act earlier.</em></h1>
+        <p class="hero-lede">Explore an educational estimate of cardiovascular disease risk using lifestyle, demographic, and health survey factors.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#screening">Start your assessment <span aria-hidden="true">↗</span></a>
+          <a class="text-link" href="#insights">Explore the evidence <span aria-hidden="true">↓</span></a>
         </div>
-      </section>
-    {% endif %}
+        <div class="trust-row" aria-label="Project highlights">
+          <div><strong>308,854</strong><span>survey records</span></div>
+          <div><strong>0.833</strong><span>test ROC-AUC</span></div>
+          <div><strong>80%</strong><span>target recall</span></div>
+        </div>
+      </div>
 
-    <form method="post" action="{{ url_for('predict_view') }}" class="grid">
-      <fieldset>
-        <legend>General</legend>
-        <label>Sex
-          <select name="Sex">
-            <option {{ 'selected' if form.Sex == 'Female' }}>Female</option>
-            <option {{ 'selected' if form.Sex == 'Male' }}>Male</option>
-          </select>
-        </label>
-        <label>Age category
-          <select name="Age_Category">
-            {% for opt in age_category_options %}
-              <option {{ 'selected' if form.Age_Category == opt }}>{{ opt }}</option>
+      <div class="hero-visual" aria-label="Model performance summary">
+        <div class="orbital orbital-one"></div>
+        <div class="orbital orbital-two"></div>
+        <div class="heart-visual" aria-hidden="true">
+          <svg viewBox="0 0 220 200" role="img">
+            <defs>
+              <linearGradient id="heartFill" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#ff7c66"/>
+                <stop offset="1" stop-color="#d83a52"/>
+              </linearGradient>
+            </defs>
+            <path d="M110 181C87 159 30 121 30 70 30 38 53 20 79 20c17 0 30 8 41 23 10-15 24-23 41-23 26 0 49 18 49 50 0 51-57 89-80 111l-10 9-10-9Z" fill="url(#heartFill)"/>
+            <path d="M50 102h35l13-29 24 59 16-40 9 10h23" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <article class="floating-card score-card">
+          <span class="card-label">Model quality</span>
+          <div class="score-line"><strong>83.3</strong><span>ROC-AUC<br>out of 100</span></div>
+          <div class="mini-track"><span></span></div>
+        </article>
+        <article class="floating-card signal-card">
+          <span class="signal-icon" aria-hidden="true">⌁</span>
+          <div><strong>Screening focused</strong><span>Threshold tuned to find more positive cases</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="disclaimer-strip">
+      <div class="shell disclaimer-inner">
+        <span class="info-icon" aria-hidden="true">i</span>
+        <p><strong>Educational use only.</strong> This model estimates risk from population survey patterns. It does not provide a medical diagnosis or replace professional care.</p>
+      </div>
+    </section>
+
+    <section class="screening-section shell" id="screening">
+      <div class="section-heading split-heading">
+        <div>
+          <p class="eyebrow"><span></span> Personal assessment</p>
+          <h2>Build your risk profile</h2>
+        </div>
+        <p>Complete the fields below. Your information stays in this session and is used only to generate the estimate shown on this page.</p>
+      </div>
+
+      {% if error %}
+        <div class="banner banner-error" role="alert">
+          <strong>We could not calculate your result.</strong>
+          <span>{{ error }}</span>
+        </div>
+      {% endif %}
+
+      {% if result %}
+        <section class="result-panel {{ 'result-risk' if result.at_risk else 'result-ok' }}" aria-live="polite">
+          <div class="result-gauge" style="--risk-score: {{ result.percent }};">
+            <div><strong>{{ result.percent }}%</strong><span>estimated probability</span></div>
+          </div>
+          <div class="result-copy">
+            <p class="result-kicker">Your screening result</p>
+            <h3>{{ result.label }}</h3>
+            <p>The model compared your estimated probability with its {{ result.threshold }}% screening threshold. This threshold prioritizes finding more potential positive cases.</p>
+            <div class="result-meta">
+              <span><small>Computed BMI</small><strong>{{ result.bmi }}</strong></span>
+              <span><small>BMI category</small><strong>{{ result.bmi_category }}</strong></span>
+              <span><small>Decision threshold</small><strong>{{ result.threshold }}%</strong></span>
+            </div>
+          </div>
+          <div class="result-next">
+            <strong>What now?</strong>
+            <p>Discuss cardiovascular risk with a qualified clinician, especially if you have symptoms or known risk factors.</p>
+          </div>
+        </section>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('predict_view') }}" class="assessment-form">
+        <fieldset>
+          <div class="fieldset-heading">
+            <span>01</span>
+            <div><legend>About you</legend><p>Basic demographic and body measurements</p></div>
+          </div>
+          <div class="field-grid">
+            <label>Sex
+              <select name="Sex">
+                <option {{ 'selected' if form.Sex == 'Female' }}>Female</option>
+                <option {{ 'selected' if form.Sex == 'Male' }}>Male</option>
+              </select>
+            </label>
+            <label>Age category
+              <select name="Age_Category">
+                {% for opt in age_category_options %}
+                  <option {{ 'selected' if form.Age_Category == opt }}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Height <span class="unit">cm</span>
+              <input type="number" step="0.1" min="50" max="260" name="Height_cm" value="{{ form.Height_cm }}" required>
+            </label>
+            <label>Weight <span class="unit">kg</span>
+              <input type="number" step="0.1" min="20" max="400" name="Weight_kg" value="{{ form.Weight_kg }}" required>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <div class="fieldset-heading">
+            <span>02</span>
+            <div><legend>Health status</legend><p>Recent care and existing health conditions</p></div>
+          </div>
+          <div class="field-grid">
+            <label>General health
+              <select name="General_Health">
+                {% for opt in general_health_options %}
+                  <option {{ 'selected' if form.General_Health == opt }}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label>Last checkup
+              <select name="Checkup">
+                {% for opt in checkup_options %}
+                  <option {{ 'selected' if form.Checkup == opt }}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </label>
+            <label class="field-wide">Diabetes status
+              <select name="Diabetes">
+                {% for opt in diabetes_options %}
+                  <option {{ 'selected' if form.Diabetes == opt }}>{{ opt }}</option>
+                {% endfor %}
+              </select>
+            </label>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <div class="fieldset-heading">
+            <span>03</span>
+            <div><legend>Health history</legend><p>Conditions that contribute to cumulative risk</p></div>
+          </div>
+          <div class="field-grid compact-grid">
+            {% for field, display in [('Arthritis','Arthritis'), ('Depression','Depression'), ('Skin_Cancer','Skin cancer'), ('Other_Cancer','Other cancer')] %}
+              <label>{{ display }}
+                <select name="{{ field }}">
+                  <option {{ 'selected' if form[field] == 'No' }}>No</option>
+                  <option {{ 'selected' if form[field] == 'Yes' }}>Yes</option>
+                </select>
+              </label>
             {% endfor %}
-          </select>
-        </label>
-        <label>Height (cm)
-          <input type="number" step="0.1" min="50" max="260" name="Height_cm" value="{{ form.Height_cm }}" required>
-        </label>
-        <label>Weight (kg)
-          <input type="number" step="0.1" min="20" max="400" name="Weight_kg" value="{{ form.Weight_kg }}" required>
-        </label>
-      </fieldset>
+          </div>
+        </fieldset>
 
-      <fieldset>
-        <legend>Health status</legend>
-        <label>General health (self-reported)
-          <select name="General_Health">
-            {% for opt in general_health_options %}
-              <option {{ 'selected' if form.General_Health == opt }}>{{ opt }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>Last checkup
-          <select name="Checkup">
-            {% for opt in checkup_options %}
-              <option {{ 'selected' if form.Checkup == opt }}>{{ opt }}</option>
-            {% endfor %}
-          </select>
-        </label>
-        <label>Diabetes status
-          <select name="Diabetes">
-            {% for opt in diabetes_options %}
-              <option {{ 'selected' if form.Diabetes == opt }}>{{ opt }}</option>
-            {% endfor %}
-          </select>
-        </label>
-      </fieldset>
+        <fieldset>
+          <div class="fieldset-heading">
+            <span>04</span>
+            <div><legend>Lifestyle</legend><p>Movement, smoking history, and monthly consumption</p></div>
+          </div>
+          <div class="field-grid compact-grid">
+            <label>Regular exercise
+              <select name="Exercise">
+                <option {{ 'selected' if form.Exercise == 'Yes' }}>Yes</option>
+                <option {{ 'selected' if form.Exercise == 'No' }}>No</option>
+              </select>
+            </label>
+            <label>Smoking history
+              <select name="Smoking_History">
+                <option {{ 'selected' if form.Smoking_History == 'No' }}>No</option>
+                <option {{ 'selected' if form.Smoking_History == 'Yes' }}>Yes</option>
+              </select>
+            </label>
+            <label>Alcohol <span class="unit">days/month</span>
+              <input type="number" step="1" min="0" max="30" name="Alcohol_Consumption" value="{{ form.Alcohol_Consumption }}" required>
+            </label>
+            <label>Fruit <span class="unit">times/month</span>
+              <input type="number" step="1" min="0" max="120" name="Fruit_Consumption" value="{{ form.Fruit_Consumption }}" required>
+            </label>
+            <label>Green vegetables <span class="unit">times/month</span>
+              <input type="number" step="1" min="0" max="120" name="Green_Vegetables_Consumption" value="{{ form.Green_Vegetables_Consumption }}" required>
+            </label>
+            <label>Fried potatoes <span class="unit">times/month</span>
+              <input type="number" step="1" min="0" max="120" name="FriedPotato_Consumption" value="{{ form.FriedPotato_Consumption }}" required>
+            </label>
+          </div>
+        </fieldset>
 
-      <fieldset>
-        <legend>Comorbidities</legend>
-        {% for field, display in [('Arthritis','Arthritis'), ('Depression','Depression'), ('Skin_Cancer','Skin cancer'), ('Other_Cancer','Other cancer')] %}
-        <label class="yesno">{{ display }}
-          <select name="{{ field }}">
-            <option {{ 'selected' if form[field] == 'No' }}>No</option>
-            <option {{ 'selected' if form[field] == 'Yes' }}>Yes</option>
-          </select>
-        </label>
-        {% endfor %}
-      </fieldset>
+        <div class="submit-row">
+          <div><strong>Ready for your estimate?</strong><span>Results appear instantly above the form.</span></div>
+          <button type="submit">Calculate my risk <span aria-hidden="true">→</span></button>
+        </div>
+      </form>
+    </section>
 
-      <fieldset>
-        <legend>Lifestyle</legend>
-        <label class="yesno">Regular exercise
-          <select name="Exercise">
-            <option {{ 'selected' if form.Exercise == 'Yes' }}>Yes</option>
-            <option {{ 'selected' if form.Exercise == 'No' }}>No</option>
-          </select>
-        </label>
-        <label class="yesno">Smoking history
-          <select name="Smoking_History">
-            <option {{ 'selected' if form.Smoking_History == 'No' }}>No</option>
-            <option {{ 'selected' if form.Smoking_History == 'Yes' }}>Yes</option>
-          </select>
-        </label>
-        <label>Alcohol consumption (days/month)
-          <input type="number" step="1" min="0" max="30" name="Alcohol_Consumption" value="{{ form.Alcohol_Consumption }}" required>
-        </label>
-        <label>Fruit consumption (times/month)
-          <input type="number" step="1" min="0" max="120" name="Fruit_Consumption" value="{{ form.Fruit_Consumption }}" required>
-        </label>
-        <label>Green vegetable consumption (times/month)
-          <input type="number" step="1" min="0" max="120" name="Green_Vegetables_Consumption" value="{{ form.Green_Vegetables_Consumption }}" required>
-        </label>
-        <label>Fried potato consumption (times/month)
-          <input type="number" step="1" min="0" max="120" name="FriedPotato_Consumption" value="{{ form.FriedPotato_Consumption }}" required>
-        </label>
-      </fieldset>
+    <section class="insights-section" id="insights">
+      <div class="shell">
+        <div class="section-heading insights-heading">
+          <div>
+            <p class="eyebrow light"><span></span> Exploratory data analysis</p>
+            <h2>What the data revealed</h2>
+          </div>
+          <p>These charts come directly from the project notebook. They describe patterns in the survey data and should not be interpreted as proof that one factor causes heart disease.</p>
+        </div>
 
-      <button type="submit">Estimate risk</button>
-    </form>
+        <div class="chart-grid">
+          <article class="chart-card chart-card-large">
+            <div class="chart-copy"><span>01 · Demographics</span><h3>Risk increases with age for both sexes</h3><p>Male respondents show a higher observed heart disease rate in every age band, reaching 29.0% in the 80+ group.</p></div>
+            <img src="{{ url_for('static', filename='charts/age-sex-risk.png') }}" alt="Heatmap showing heart disease rates increasing by age category for female and male respondents">
+          </article>
+          <article class="chart-card">
+            <div class="chart-copy"><span>02 · Self-rated health</span><h3>A strong health gradient</h3><p>Observed heart disease rises from about 2% among respondents reporting excellent health to nearly 32% among those reporting poor health.</p></div>
+            <img src="{{ url_for('static', filename='charts/general-health-risk.png') }}" alt="Bar chart comparing heart disease percentages across general health categories">
+          </article>
+          <article class="chart-card">
+            <div class="chart-copy"><span>03 · Comorbidities</span><h3>Risk compounds as conditions accumulate</h3><p>The observed rate rises steadily with the engineered comorbidity count, from roughly 3% with none to about 40% with all five.</p></div>
+            <img src="{{ url_for('static', filename='charts/comorbidity-risk.png') }}" alt="Bar chart showing heart disease rate rising with the number of comorbidities">
+          </article>
+          <article class="chart-card chart-card-wide">
+            <div class="chart-copy"><span>04 · Model evaluation</span><h3>The ranking works, but threshold choice matters</h3><p>Average precision reaches 0.302. Lowering the decision threshold to 0.0924 increases positive recall from 7% to approximately 80%.</p></div>
+            <img src="{{ url_for('static', filename='charts/precision-recall.png') }}" alt="Precision recall curve with average precision of 0.302">
+          </article>
+        </div>
+      </div>
+    </section>
 
-    <footer>
-      Model: LightGBM classifier trained on the "Cardiovascular Diseases Risk Prediction" survey dataset (~309k rows).
-      Test ROC-AUC 0.833, average precision 0.302. For education/portfolio purposes only &mdash; not medical advice.
-    </footer>
+    <section class="about-section shell" id="about">
+      <div class="about-lead">
+        <p class="eyebrow"><span></span> How it works</p>
+        <h2>Designed for screening, evaluated honestly</h2>
+      </div>
+      <div class="method-grid">
+        <article><span>01</span><h3>Leakage-aware preparation</h3><p>The scaler learns from training data only, while SMOTE runs inside each cross-validation fold.</p></article>
+        <article><span>02</span><h3>Tuned model selection</h3><p>Fifty Optuna trials compared LightGBM and histogram gradient boosting using average precision.</p></article>
+        <article><span>03</span><h3>Deployment-ready bundle</h3><p>The saved artifact includes the pipeline, scaler, label encoder, feature order, and chosen threshold.</p></article>
+      </div>
+    </section>
   </main>
+
+  <footer class="site-footer">
+    <div class="shell footer-inner">
+      <div><a class="brand footer-brand" href="#top"><span class="brand-mark" aria-hidden="true"><span></span></span><span>PulseCheck</span></a><p>Cardiovascular risk exploration through responsible machine learning.</p></div>
+      <div class="footer-metrics"><span>Model</span><strong>LightGBM</strong><span>Test ROC-AUC</span><strong>0.833</strong><span>Average precision</span><strong>0.302</strong></div>
+      <p class="footer-note">Portfolio and educational use only. Not medical advice.</p>
+    </div>
+  </footer>
 </body>
 </html>
